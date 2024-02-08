@@ -1,0 +1,62 @@
+menu "Pico TTS"
+
+    choice PICOTTS_LANGUAGE
+        prompt "Voice language"
+        default PICOTTS_LANGUAGE_EN_GB
+
+        config PICOTTS_LANGUAGE_EN_GB
+            bool "English (en-GB)"
+
+        config PICOTTS_LANGUAGE_EN_US
+            bool "English (en-US)"
+
+        config PICOTTS_LANGUAGE_DE_DE
+            bool "German (de-DE)"
+
+        config PICOTTS_LANGUAGE_ES_ES
+            bool "Spanish (es-ES)"
+
+        config PICOTTS_LANGUAGE_FR_FR
+            bool "French (fr-FR)"
+
+        config PICOTTS_LANGUAGE_IT_IT
+            bool "Italian (it-IT)"
+
+    endchoice
+
+    choice PICOTTS_RESOURCE_MODE
+        prompt "Resource storage mode"
+        default PICOTTS_RESOURCE_MODE_EMBED
+
+        config PICOTTS_RESOURCE_MODE_EMBED
+            bool "Embed into application binary"
+
+        config PICOTTS_RESOURCE_MODE_PARTITION
+            bool "Load resources from raw partitions"
+
+    endchoice
+
+    config PICOTTS_TA_PARTITION
+        string "TA resource partition name" if PICOTTS_RESOURCE_MODE_PARTITION
+        default "picotts_ta"
+        help
+            Partition name where the Text Analysis (TA) resource blob is
+            located. This needs to be flashed separately from the application.
+
+    config PICOTTS_SG_PARTITION
+        string "SG resource partition name" if PICOTTS_RESOURCE_MODE_PARTITION
+        default "picotts_sg"
+        help
+            Partition name where the Signal Generator (SG) resource blob is
+            located. This needs to be flashed separately from the application.
+
+    config PICOTTS_INPUT_QUEUE_SIZE
+        int "TTS input queue size"
+        default 256
+        help
+            The size of the TTS input quueue used to transfer the text to be
+            spoken over to the TTS engine. A larger size makes it less likely
+            that the picotts_add() function will block, but of course has the
+            downside of using up more memory.
+
+endmenu
