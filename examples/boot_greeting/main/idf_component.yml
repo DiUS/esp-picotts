@@ -1,5 +1,5 @@
 dependencies:
   espressif/esp_codec_dev: "~1.0.0"
-  dius/picotts:
-    version: "~1.0.0"
+  jmattsson/esp-picotts:
+    version: "==1.*"
     override_path: "../../../"

@@ -52,3 +52,15 @@ typedef void (*picotts_error_notify_fn)(void);
  *   @c picotts_init(). Pass NULL to unregister a set callback function.
  */
 void picotts_set_error_notify(picotts_error_notify_fn cb);
+
+
+typedef void (*picotts_idle_notify_fn)(void);
+
+/**
+ * Sets a callback function which gets called when the TTS engines enters
+ * idle state again after having generated data. May be used for resource
+ * arbitration.
+ * @param cb The callback handler. Invoked from the TTS task when the
+ *   engine goes idle. Pass NULL to unregister a set callback function.
+ */
+void picotts_set_idle_notify(picotts_idle_notify_fn cb);

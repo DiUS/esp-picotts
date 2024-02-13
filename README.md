@@ -13,8 +13,6 @@ This component provides an ESP-IDF port of the popular PicoTTS Text-to-Speech en
 
 The Text-to-Speech engine is quite resource intensive. While the code size is only around 175KB, language resources occupy another 750-1400KB of flash depending on language, and the engine uses just over 1.1MB of RAM while initialised. As such an ESP32-S3 with sufficient amount of PSRAM and flash is a recommended target.
 
-Note that while generating speech, the TTS task may be busy for quite some time and can easily trigger the IDF's watchdog. You may want to adjust the watchdog settings.
-
 This component does not provide any board-specific audio support. The TTS engine generates 16bit/16KHz samples, and leaves it to the user to direct those to the correct audio device.
 
 ## Getting started

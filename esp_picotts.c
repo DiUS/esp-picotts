@@ -23,8 +23,11 @@
 
 #define PICOTASK_EXIT  0x0000001u
 
+#define IDLE_WAIT_COUNT 5
+
 static picotts_output_fn outputCb;
 static picotts_error_notify_fn errorCb;
+static picotts_idle_notify_fn idleCb;
 
 static SemaphoreHandle_t exitLock;
 static QueueHandle_t textQ;
@@ -128,6 +131,11 @@ static void esp_pico_run(void *)
 {
   ESP_LOGI(tag, "Task started");
   bool error = false;
+  enum {
+    WAITING_FOR_BYTES, WAITING_FOR_OUTPUT
+  } state = WAITING_FOR_BYTES;
+  unsigned idles = 0;
+
   while(!error)
   {
     uint32_t flags;
@@ -138,7 +146,7 @@ static void esp_pico_run(void *)
     }
 
     uint8_t c;
-    if (xQueuePeek(textQ, &c, pdMS_TO_TICKS(100) == pdPASS))
+    while (xQueuePeek(textQ, &c, 0) == pdPASS)
     {
       int16_t processed = 0;
       int ret = pico_putTextUtf8(picoEngine, &c, 1, &processed);
@@ -151,23 +159,49 @@ static void esp_pico_run(void *)
       else
       {
         if (processed)
+        {
           xQueueReceive(textQ, &c, 0);
+          if (state == WAITING_FOR_BYTES)
+            state = WAITING_FOR_OUTPUT;
+        }
       }
     }
 
-    int status;
-    do {
-      // Only PICO_DATA_PCM_16BIT is defined, so we don't propage the type info
-      int16_t outbuf[128];
-      int16_t bytes = 0, type = 0;
-      status = pico_getData(picoEngine, outbuf, sizeof(outbuf), &bytes, &type);
-      if (bytes > 0)
-        outputCb(outbuf, bytes/2);
-    } while (status == PICO_STEP_BUSY);
-    if (status != PICO_STEP_IDLE)
+    switch (state)
     {
-      esp_pico_err_print("Get data failed, stopping TTS", status);
-      error = true;
+      case WAITING_FOR_BYTES:
+        if (idles < IDLE_WAIT_COUNT)
+        {
+          if (++idles == IDLE_WAIT_COUNT && idleCb)
+            idleCb();
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
+        break;
+      case WAITING_FOR_OUTPUT:
+      {
+        int status;
+        do {
+          int16_t outbuf[128];
+          int16_t bytes = 0, type = 0;
+          // Note: Only PICO_DATA_PCM_16BIT is defined as output type, so we
+          // don't propagate that information. Rather, it's a fixed property.
+          status =
+            pico_getData(picoEngine, outbuf, sizeof(outbuf), &bytes, &type);
+          if (bytes > 0)
+            outputCb(outbuf, bytes/2);
+        } while (status == PICO_STEP_BUSY);
+        if (status != PICO_STEP_IDLE)
+        {
+          esp_pico_err_print("Get data failed, stopping TTS", status);
+          error = true;
+        }
+        else
+        {
+          state = WAITING_FOR_BYTES;
+          idles = 0;
+        }
+        break;
+       }
     }
   }
   ESP_LOGI(tag, "Exiting task");
@@ -341,4 +375,10 @@ void picotts_shutdown(void)
 void picotts_set_error_notify(picotts_error_notify_fn cb)
 {
   errorCb = cb;
+}
+
+
+void picotts_set_idle_notify(picotts_idle_notify_fn cb)
+{
+  idleCb = cb;
 }
