@@ -1,5 +1,12 @@
+#ifndef PICOTTS_H
+#define PICOTTS_H
+
 #include <stdbool.h>
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define PICOTTS_SAMPLE_FREQ_HZ 16000
 #define PICOTTS_SAMPLE_BITS 16
@@ -64,3 +71,8 @@ typedef void (*picotts_idle_notify_fn)(void);
  *   engine goes idle. Pass NULL to unregister a set callback function.
  */
 void picotts_set_idle_notify(picotts_idle_notify_fn cb);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

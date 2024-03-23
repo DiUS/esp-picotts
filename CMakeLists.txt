@@ -89,9 +89,27 @@ add_custom_command(OUTPUT ${PICOTTS_SG_BIN}
   COMMAND cp ${PICOTTS_LANG_DIR}/${PICOTTS_SG_SRC} ${PICOTTS_SG_BIN_PATH})
 add_custom_target(picotts_ta_bin_gen DEPENDS ${PICOTTS_TA_BIN_PATH})
 add_custom_target(picotts_sg_bin_gen DEPENDS ${PICOTTS_SG_BIN_PATH})
-target_add_binary_data(
-  ${COMPONENT_LIB} ${PICOTTS_TA_BIN_PATH} BINARY DEPENDS picotts_ta_bin_gen)
-target_add_binary_data(
-  ${COMPONENT_LIB} ${PICOTTS_SG_BIN_PATH} BINARY DEPENDS picotts_sg_bin_gen)
 set_property(DIRECTORY "${COMPONENT_DIR}" APPEND PROPERTY
   ADDITIONAL_CLEAN_FILES ${PICOTTS_TA_BIN} ${PICOTTS_SG_BIN})
+
+if(${CONFIG_PICOTTS_RESOURCE_MODE_PARTITION})
+  partition_table_get_partition_info(part_ta_size "--partition-name ${CONFIG_PICOTTS_TA_PARTITION}" "size")
+  partition_table_get_partition_info(part_ta_offs "--partition-name ${CONFIG_PICOTTS_TA_PARTITION}" "offset")
+  if ("${part_ta_size}" AND "${part_ta_offs}")
+    esptool_py_flash_to_partition(flash "${CONFIG_PICOTTS_TA_PARTITION}" "${PICOTTS_TA_BIN_PATH}")
+  else()
+    set(message "Failed to find ${CONFIG_PICOTTS_TA_PARTITION} in partition table")
+  endif()
+  partition_table_get_partition_info(part_sg_size "--partition-name ${CONFIG_PICOTTS_SG_PARTITION}" "size")
+  partition_table_get_partition_info(part_sg_offs "--partition-name ${CONFIG_PICOTTS_SG_PARTITION}" "offset")
+  if ("${part_sg_size}" AND "${part_sg_offs}")
+    esptool_py_flash_to_partition(flash "${CONFIG_PICOTTS_SG_PARTITION}" "${PICOTTS_SG_BIN_PATH}")
+  else()
+    set(message "Failed to find ${CONFIG_PICOTTS_SG_PARTITION} in partition table")
+  endif()
+else()
+  target_add_binary_data(
+    ${COMPONENT_LIB} ${PICOTTS_TA_BIN_PATH} BINARY DEPENDS picotts_ta_bin_gen)
+  target_add_binary_data(
+    ${COMPONENT_LIB} ${PICOTTS_SG_BIN_PATH} BINARY DEPENDS picotts_sg_bin_gen)
+endif()

@@ -19,11 +19,6 @@ idf.py build
 idf.py flash
 ```
 
-The partition table in this example also makes allowance for having the picotts language resource files stored in separate partitions, but if switching to that option you will additionally need to run:
-
-```
-parttool.py write_partition --partition-name picotts_ta --input build/esp-idf/picotts/picotts_ta.bin
-parttool.py write_partition --partition-name picotts_sg --input build/esp-idf/picotts/picotts_sg.bin
-```
+The partition table in this example also makes allowance for having the picotts language resource files stored in separate partitions.
 
 As usual, the console log can be accessed with `idf.py monitor`.
