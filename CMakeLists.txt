@@ -107,6 +107,7 @@ if(${CONFIG_PICOTTS_RESOURCE_MODE_PARTITION})
   else()
     set(message "Failed to find ${CONFIG_PICOTTS_SG_PARTITION} in partition table")
   endif()
+  add_dependencies(${COMPONENT_LIB} picotts_ta_bin_gen picotts_sg_bin_gen)
 else()
   target_add_binary_data(
     ${COMPONENT_LIB} ${PICOTTS_TA_BIN_PATH} BINARY DEPENDS picotts_ta_bin_gen)

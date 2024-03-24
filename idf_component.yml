@@ -1,4 +1,4 @@
-version: "1.1.1"
+version: "1.1.2"
 description: "PicoTTS Text-to-Speech engine"
 license: "Apache-2.0"
 maintainers:
