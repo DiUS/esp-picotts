@@ -15,6 +15,10 @@ The Text-to-Speech engine is quite resource intensive. While the code size is on
 
 This component does not provide any board-specific audio support. The TTS engine generates 16bit/16KHz samples, and leaves it to the user to direct those to the correct audio device.
 
+## Performance
+
+On an ESP32-S3 not otherwise occupied, real-time speech generation is possible without any particularly noticeable initial latency. A demo of this component in use can be found via [this blog post](https://dius.com.au/machine-learning-on-the-edge-speech-command-recognition/), down towards the bottom.
+
 ## Getting started
 
 Using the PicoTTS component is straight forward. Effectively the steps are:
@@ -55,6 +59,7 @@ The PicoTTS engine relies on two resource blobs, a Text Analysis (TA) resource a
 
 There are two options on how to bundle the resource files onto flash. The default, and arguably the easiest, is to embed the resource files directly into the application binary. The one downside to this approach is that application size grows significantly, and may present an issue with firmware upgrades. You will definitely use a much larger application partition than usual. Alternatively, the resource files can be placed in dedicated flash partitions and accessed from there instead. The advantage with this approach is that the language resources are no longer directly coupled to the application binary. Which approach is best will depend on the specific project circumstances.
 
+To facilitate this type of resource usage the model loading functions of PicoTTS have been wrapped/replaced (see `esp_picorsrc.c`). The source in the `pico/` directory is unmodified, and is the pristine upstream source.
 
 ### Custom paritions for language resources
 
