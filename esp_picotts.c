@@ -15,7 +15,8 @@
 #include <freertos/semphr.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <math.h>
+#include <stdint.h>
+#include <string.h>
 
 // Yep, that's 1.1MB needed by PicoTTS, not counting the resource files which
 // we access directly from flash.
@@ -112,10 +113,22 @@ static const void *find_sg_bin_start()
 }
 
 
-// Use regular exp() function as the picotty hack doesn't work on Xtensa
+// Portable re-implementation of picopal_quick_exp() (Schraudolph's fast exp
+// approximation). The original relies on a union + PICO_ENDIANNESS detection
+// which doesn't work on Xtensa, so we build the IEEE-754 double explicitly.
+//
+// Do NOT replace this with the regular exp(): the signal generator relies on
+// the approximation's error. E.g. env_spec() sets the DC bin to spect[0] = 0
+// and truncates the result to an integer: quick_exp(0) = 0.971 -> 0 (no DC),
+// whereas exp(0) = 1.0 -> 1, which leaves a DC component that becomes a DC
+// plateau (buzz) during silences once the impulse response is normalized.
 picoos_double picoos_quick_exp(const picoos_double y)
 {
-  return exp(y);
+  int32_t hi = (int32_t)(1512775.3951951856938297995605697f * y) + 1072632447;
+  uint64_t bits = (uint64_t)(uint32_t)hi << 32;
+  picoos_double result;
+  memcpy(&result, &bits, sizeof(result));
+  return result;
 }
 
 
